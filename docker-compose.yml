@@ -3,7 +3,7 @@ version: '3.8'
 services:
   db:
     image: mysql:8.0
-    container_name: mysql_db
+    container_name: track_flow_mysql
     environment:
       MYSQL_ROOT_PASSWORD: admin
       MYSQL_DATABASE: trackflowdb
