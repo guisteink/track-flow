@@ -1,5 +1,7 @@
 package com.example.track_flow.controller;
 
+import com.example.track_flow.dto.PackageRequestDTO;
+import com.example.track_flow.dto.PackageResponseDTO;
 import com.example.track_flow.model.Package;
 import com.example.track_flow.service.PackageService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,8 +20,8 @@ public class PackageController {
     private PackageService packageService;
 
     @PostMapping
-    public ResponseEntity<Package> createPackage(@RequestBody Package packageRequest) {
-        Package createdPackage = packageService.createPackage(packageRequest);
+    public ResponseEntity<PackageResponseDTO> createPackage(@RequestBody PackageRequestDTO packageRequestDTO) {
+        PackageResponseDTO createdPackage = packageService.createPackage(packageRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdPackage);
     }
 
