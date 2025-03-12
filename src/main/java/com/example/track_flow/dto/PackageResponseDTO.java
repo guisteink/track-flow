@@ -1,6 +1,5 @@
 package com.example.track_flow.dto;
 
-import java.time.LocalDateTime;
 
 public class PackageResponseDTO {
     private String id;
@@ -8,10 +7,9 @@ public class PackageResponseDTO {
     private String sender;
     private String recipient;
     private String status;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private String createdAt;
+    private String updatedAt;
 
-    // Getters and Setters
     public String getId() {
         return id;
     }
@@ -52,19 +50,19 @@ public class PackageResponseDTO {
         this.status = status;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public String getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(String createdAt) {
         this.createdAt = createdAt;
     }
 
-    public LocalDateTime getUpdatedAt() {
+    public String getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(LocalDateTime updatedAt) {
+    public void setUpdatedAt(String updatedAt) {
         this.updatedAt = updatedAt;
     }
 }

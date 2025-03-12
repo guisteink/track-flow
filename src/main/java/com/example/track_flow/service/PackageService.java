@@ -67,14 +67,15 @@ public class PackageService {
     }
 
     private PackageResponseDTO mapToResponseDTO(Package savedPackage) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
         PackageResponseDTO responseDTO = new PackageResponseDTO();
         responseDTO.setId(savedPackage.getId());
         responseDTO.setDescription(savedPackage.getDescription());
         responseDTO.setSender(savedPackage.getSender());
         responseDTO.setRecipient(savedPackage.getRecipient());
         responseDTO.setStatus(savedPackage.getStatus().name());
-        responseDTO.setCreatedAt(savedPackage.getCreatedAt());
-        responseDTO.setUpdatedAt(savedPackage.getUpdatedAt());
+        responseDTO.setCreatedAt(savedPackage.getCreatedAt().format(formatter));
+        responseDTO.setUpdatedAt(savedPackage.getUpdatedAt().format(formatter));
         logger.debug("Mapeando pacote salvo para DTO de resposta: {}", responseDTO);
         return responseDTO;
     }
