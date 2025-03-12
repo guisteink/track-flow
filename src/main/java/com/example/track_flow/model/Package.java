@@ -36,6 +36,9 @@ public class Package {
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     @Column
+    private LocalDateTime estimatedDeliveryDate;
+    
+    @Column
     private LocalDateTime deliveredAt;
 
     @Column

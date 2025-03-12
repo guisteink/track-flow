@@ -1,14 +1,9 @@
 package com.example.track_flow.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "eventos")
-@Data
-@NoArgsConstructor
 public class Event {
 
     @Id
@@ -16,21 +11,44 @@ public class Event {
     private String id;
 
     @Column(nullable = false)
-    private String location;
-
-    @Column(nullable = false)
     private String description;
 
     @Column(nullable = false)
-    private LocalDateTime date = LocalDateTime.now();
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @ManyToOne
     @JoinColumn(name = "package_id", nullable = false)
     private Package pkg;
 
-    public Event(String location, String description, Package pkg) {
-        this.location = location;
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
         this.description = description;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Package getPkg() {
+        return pkg;
+    }
+
+    public void setPkg(Package pkg) {
         this.pkg = pkg;
     }
 }
