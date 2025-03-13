@@ -3,7 +3,9 @@ package com.example.track_flow.service;
 import com.example.track_flow.dto.PackageRequestDTO;
 import com.example.track_flow.dto.PackageResponseDTO;
 import com.example.track_flow.dto.UpdatePackageStatusRequestDTO;
+import com.example.track_flow.model.Event;
 import com.example.track_flow.model.Package;
+import com.example.track_flow.repository.EventRepository;
 import com.example.track_flow.repository.PackageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,6 +34,9 @@ public class PackageService {
     @Autowired
     private FunFactService funFactService;
 
+    @Autowired
+    private EventRepository eventRepository;
+
     public PackageResponseDTO createPackage(PackageRequestDTO packageRequestDTO) {
         logger.info("Iniciando criação do pacote com dados: {}", packageRequestDTO);
 
@@ -48,11 +53,16 @@ public class PackageService {
         packageRequest.setHoliday(isHoliday);
         packageRequest.setFunFact(funFact);
         packageRequest.setStatus(Package.Status.CREATED);
-        packageRequest.setCreatedAt(LocalDateTime.now());
-        packageRequest.setUpdatedAt(LocalDateTime.now());
 
         Package savedPackage = packageRepository.save(packageRequest);
         logger.info("Pacote salvo com sucesso: {}", savedPackage);
+
+        Event event = new Event();
+        event.setPkg(savedPackage);
+        event.setDescription("Pacote chegou ao centro de distribuição");
+        event.setLocalization("Centro de Distribuição São Paulo");
+        eventRepository.save(event);
+        logger.info("Evento salvo com sucesso: {}", event);
 
         return mapToResponseDTO(savedPackage);
     }
@@ -91,13 +101,14 @@ public class PackageService {
         return packageRepository.findAll();
     }
 
-    public List<String> getAllEvents() {
-        logger.info("Buscando todos os eventos");
-        List<String> events = new ArrayList<>();
-        events.add("Package created");
-        events.add("Package updated");
-        events.add("Package delivered");
-        return events;
+    public List<Event> getPackageEvents(UUID packageId) {
+        logger.info("Buscando todos os eventos do pacote com id: {}", packageId);
+        Optional<Package> optionalPackage = packageRepository.findById(packageId);
+        if (optionalPackage.isPresent()) {
+            return optionalPackage.get().getEvents();
+        } else {
+            throw new IllegalArgumentException("Package not found");
+        }
     }
     
     public PackageResponseDTO updatePackageStatus(UUID id, UpdatePackageStatusRequestDTO updatePackageStatusRequestDTO) {

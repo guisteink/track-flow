@@ -3,6 +3,7 @@ package com.example.track_flow.controller;
 import com.example.track_flow.dto.PackageRequestDTO;
 import com.example.track_flow.dto.PackageResponseDTO;
 import com.example.track_flow.dto.UpdatePackageStatusRequestDTO;
+import com.example.track_flow.model.Event;
 import com.example.track_flow.model.Package;
 import com.example.track_flow.service.PackageService;
 
@@ -41,24 +42,24 @@ public class PackageController {
         return ResponseEntity.ok(packages);
     }
 
-    @GetMapping("/events")
-    public ResponseEntity<List<String>> getAllEvents() {
-        logger.info("Requisição para listar todos os eventos");
-        List<String> events = packageService.getAllEvents();
-        logger.info("Eventos listados com sucesso: {}", events);
+    @GetMapping("/{id}/events")
+    public ResponseEntity<List<Event>> getPackageEvents(@PathVariable UUID id) {
+        logger.info("Requisição para listar todos os eventos do pacote com id: {}", id);
+        List<Event> events = packageService.getPackageEvents(id);
+        logger.info("Eventos do pacote listados com sucesso: {}", events);
         return ResponseEntity.ok(events);
     }
 
-@PutMapping("/{id}/status")
-public ResponseEntity<PackageResponseDTO> updatePackageStatus(@PathVariable UUID id, @RequestBody UpdatePackageStatusRequestDTO updatePackageStatusRequestDTO) {
-    try {
-        logger.info("Requisição para atualizar o status do pacote com id: {}", id);
-        PackageResponseDTO updatedPackage = packageService.updatePackageStatus(id, updatePackageStatusRequestDTO);
-        logger.info("Status do pacote atualizado com sucesso: {}", updatedPackage);
-        return ResponseEntity.ok(updatedPackage);
-    } catch (IllegalArgumentException e) {
-        logger.error("Erro ao atualizar o status do pacote: {}", e.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+    @PutMapping("/{id}/status")
+    public ResponseEntity<PackageResponseDTO> updatePackageStatus(@PathVariable UUID id, @RequestBody UpdatePackageStatusRequestDTO updatePackageStatusRequestDTO) {
+        try {
+            logger.info("Requisição para atualizar o status do pacote com id: {}", id);
+            PackageResponseDTO updatedPackage = packageService.updatePackageStatus(id, updatePackageStatusRequestDTO);
+            logger.info("Status do pacote atualizado com sucesso: {}", updatedPackage);
+            return ResponseEntity.ok(updatedPackage);
+        } catch (IllegalArgumentException e) {
+            logger.error("Erro ao atualizar o status do pacote: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
     }
-}
 }

@@ -1,5 +1,7 @@
 package com.example.track_flow.dto;
 
+import java.util.List;
+
 public class PackageResponseDTO {
     private String id;
     private String description;
@@ -9,6 +11,7 @@ public class PackageResponseDTO {
     private String createdAt;
     private String updatedAt;
     private String deliveredAt;
+    private List<EventDTO> events;
 
     public String getId() {
         return id;
@@ -72,5 +75,13 @@ public class PackageResponseDTO {
 
     public void setDeliveredAt(String deliveredAt) {
         this.deliveredAt = deliveredAt;
+    }
+
+    public List<EventDTO> getEvents() {
+        return events;
+    }
+
+    public void setEvents(List<EventDTO> events) {
+        this.events = events;
     }
 }
