@@ -2,6 +2,7 @@ package com.example.track_flow.controller;
 
 import com.example.track_flow.dto.PackageRequestDTO;
 import com.example.track_flow.dto.PackageResponseDTO;
+import com.example.track_flow.dto.UpdatePackageStatusRequestDTO;
 import com.example.track_flow.model.Package;
 import com.example.track_flow.service.PackageService;
 
@@ -13,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/packages")
@@ -47,15 +49,16 @@ public class PackageController {
         return ResponseEntity.ok(events);
     }
 
-    @PutMapping("/{id}/status")
-    public ResponseEntity<PackageResponseDTO> updatePackageStatus(@PathVariable String id, @RequestBody String status) {
-        try {
-            logger.info("Requisição para atualizar o status do pacote com id: {}", id);
-            PackageResponseDTO updatedPackage = packageService.updatePackageStatus(id, status);
-            logger.info("Status do pacote atualizado com sucesso: {}", updatedPackage);
-            return ResponseEntity.ok(updatedPackage);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-        }
+@PutMapping("/{id}/status")
+public ResponseEntity<PackageResponseDTO> updatePackageStatus(@PathVariable UUID id, @RequestBody UpdatePackageStatusRequestDTO updatePackageStatusRequestDTO) {
+    try {
+        logger.info("Requisição para atualizar o status do pacote com id: {}", id);
+        PackageResponseDTO updatedPackage = packageService.updatePackageStatus(id, updatePackageStatusRequestDTO);
+        logger.info("Status do pacote atualizado com sucesso: {}", updatedPackage);
+        return ResponseEntity.ok(updatedPackage);
+    } catch (IllegalArgumentException e) {
+        logger.error("Erro ao atualizar o status do pacote: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
     }
+}
 }

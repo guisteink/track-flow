@@ -2,6 +2,7 @@ package com.example.track_flow.service;
 
 import com.example.track_flow.dto.PackageRequestDTO;
 import com.example.track_flow.dto.PackageResponseDTO;
+import com.example.track_flow.dto.UpdatePackageStatusRequestDTO;
 import com.example.track_flow.model.Package;
 import com.example.track_flow.repository.PackageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class PackageService {
@@ -97,13 +99,15 @@ public class PackageService {
         events.add("Package delivered");
         return events;
     }
-
-    public PackageResponseDTO updatePackageStatus(String id, String status) {
+    
+    public PackageResponseDTO updatePackageStatus(UUID id, UpdatePackageStatusRequestDTO updatePackageStatusRequestDTO) {
+        logger.info("Iniciando atualização do status do pacote com id: {}", id);
         Optional<Package> optionalPackage = packageRepository.findById(id);
+        
         if (optionalPackage.isPresent()) {
             Package pkg = optionalPackage.get();
-            Package.Status newStatus = Package.Status.valueOf(status);
-
+            Package.Status newStatus = Package.Status.valueOf(updatePackageStatusRequestDTO.getStatus());
+    
             if (isValidStatusTransition(pkg.getStatus(), newStatus)) {
                 pkg.setStatus(newStatus);
                 if (newStatus == Package.Status.DELIVERED) {
@@ -119,7 +123,7 @@ public class PackageService {
             throw new IllegalArgumentException("Package not found");
         }
     }
-
+    
     private boolean isValidStatusTransition(Package.Status currentStatus, Package.Status newStatus) {
         if (currentStatus == Package.Status.CREATED && newStatus == Package.Status.IN_TRANSIT) {
             return true;

@@ -3,14 +3,17 @@ package com.example.track_flow.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import org.hibernate.annotations.GenericGenerator;
+
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 public class Event {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(generator = "UUID")
+    private UUID id;
 
     @NotBlank(message = "Name is mandatory")
     private String name;
@@ -38,11 +41,11 @@ public class Event {
     }
 
     // Getters e Setters
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

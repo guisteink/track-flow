@@ -16,7 +16,7 @@ public class TrackFlowApplication {
     private static final Logger logger = LoggerFactory.getLogger(TrackFlowApplication.class);
 
     public static void main(String[] args) {
-        logger.debug("Iniciando Track Flow Application!!!");
+        logger.info("Iniciando Track Flow Application!!!");
         SpringApplication.run(TrackFlowApplication.class, args);
     }
 }
