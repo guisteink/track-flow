@@ -9,7 +9,6 @@ public class PackageRequestDTO {
     private boolean isHoliday;
     private LocalDate estimatedDeliveryDate;
 
-    // Getters and Setters
     public String getDescription() {
         return description;
     }

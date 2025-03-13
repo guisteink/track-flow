@@ -1,6 +1,5 @@
 package com.example.track_flow.dto;
 
-
 public class PackageResponseDTO {
     private String id;
     private String description;
@@ -9,6 +8,7 @@ public class PackageResponseDTO {
     private String status;
     private String createdAt;
     private String updatedAt;
+    private String deliveredAt;
 
     public String getId() {
         return id;
@@ -64,5 +64,13 @@ public class PackageResponseDTO {
 
     public void setUpdatedAt(String updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getDeliveredAt() {
+        return deliveredAt;
+    }
+
+    public void setDeliveredAt(String deliveredAt) {
+        this.deliveredAt = deliveredAt;
     }
 }
