@@ -1,12 +1,17 @@
 package com.example.track_flow.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDate;
 
 public class PackageRequestDTO {
+
     private String description;
     private String sender;
     private String recipient;
     private boolean isHoliday;
+    private String funFact;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     private LocalDate estimatedDeliveryDate;
 
     public String getDescription() {
@@ -39,6 +44,14 @@ public class PackageRequestDTO {
 
     public void setHoliday(boolean holiday) {
         isHoliday = holiday;
+    }
+
+    public String getFunFact() {
+        return funFact;
+    }
+
+    public void setFunFact(String funFact) {
+        this.funFact = funFact;
     }
 
     public LocalDate getEstimatedDeliveryDate() {

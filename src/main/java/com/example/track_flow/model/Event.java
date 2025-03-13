@@ -1,8 +1,8 @@
 package com.example.track_flow.model;
 
-import javax.persistence.*;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 @Entity
@@ -10,7 +10,7 @@ public class Event {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private String id;
+    private Long id;
 
     @NotBlank(message = "Name is mandatory")
     private String name;
@@ -19,11 +19,13 @@ public class Event {
     @Column(updatable = false)
     private LocalDateTime timestamp;
 
+    @NotBlank(message = "Description is mandatory")
     @Column(nullable = false)
     private String description;
 
-    @Column(nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @NotNull
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
     @ManyToOne
     @JoinColumn(name = "package_id", nullable = false)
@@ -32,13 +34,15 @@ public class Event {
     @PrePersist
     protected void onCreate() {
         timestamp = LocalDateTime.now();
+        createdAt = LocalDateTime.now();
     }
 
-    public String getId() {
+    // Getters e Setters
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

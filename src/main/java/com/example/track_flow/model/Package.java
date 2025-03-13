@@ -1,10 +1,11 @@
 package com.example.track_flow.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -16,7 +17,7 @@ public class Package {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private String id;
+    private Long id;
 
     @NotBlank(message = "Description is mandatory")
     @Column(nullable = false)
@@ -36,11 +37,11 @@ public class Package {
 
     @NotNull
     @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
 
     @NotNull
     @Column(nullable = false)
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    private LocalDateTime updatedAt;
 
     @Column
     private LocalDateTime estimatedDeliveryDate;
@@ -59,9 +60,8 @@ public class Package {
 
     public enum Status {
         CREATED,
-        UPDATED,
-        DELIVERED,
-        CANCELED
+        IN_TRANSIT,
+        DELIVERED
     }
 
     @PrePersist
