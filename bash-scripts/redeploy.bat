@@ -6,7 +6,7 @@ echo Construindo imagens...
 docker-compose build
 
 echo Subindo contêineres...
-docker-compose up
+docker-compose up -d
 
-echo Concluído!
+echo Aplicação redeployada com sucesso!
 pause

@@ -1,15 +1,11 @@
 #!/bin/bash
-
-# Parar e remover contêineres, redes, imagens e volumes
-echo "Executando docker-compose down..."
+echo "Parando e removendo contêineres, redes, imagens e volumes..."
 docker-compose down
 
-# Construir ou reconstruir imagens
-echo "Executando docker-compose build..."
+echo "Construindo ou reconstruindo imagens..."
 docker-compose build
 
-# Subir os contêineres
-echo "Executando docker-compose up..."
+echo "Subindo os contêineres em modo destacado..."
 docker-compose up -d
 
-echo "Concluído!"
+echo "Aplicação redeployada com sucesso!"
