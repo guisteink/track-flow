@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.example.track_flow.service.WebhookNotifier;
+
 @Service
 public class PackageService {
 
@@ -32,17 +34,20 @@ public class PackageService {
     private final HolidayService holidayService;
     private final FunFactService funFactService;
     private final PackageMapper packageMapper;
+    private final WebhookNotifier webhookNotifier;
 
     public PackageService(PackageRepository packageRepository,
                           EventRepository eventRepository,
                           HolidayService holidayService,
                           FunFactService funFactService,
-                          PackageMapper packageMapper) {
+                          PackageMapper packageMapper,
+                          WebhookNotifier webhookNotifier) {
         this.packageRepository = packageRepository;
         this.eventRepository = eventRepository;
         this.holidayService = holidayService;
         this.funFactService = funFactService;
         this.packageMapper = packageMapper;
+        this.webhookNotifier = webhookNotifier;
     }
 
     public PackageResponseDTO createPackage(PackageRequestDTO packageRequestDTO) {
@@ -111,23 +116,35 @@ public class PackageService {
         Optional<Package> optionalPackage = packageRepository.findById(id);
         if (optionalPackage.isPresent()) {
             Package pkg = optionalPackage.get();
+            Package.Status oldStatus = pkg.getStatus();
             Package.Status newStatus = Package.Status.valueOf(updateRequest.getStatus());
-            logger.info("Status atual: {}, Novo status: {}", pkg.getStatus(), newStatus);
+            logger.info("Status atual: {}, Novo status: {}", oldStatus, newStatus);
 
-            if (isValidStatusTransition(pkg.getStatus(), newStatus)) {
+            if (isValidStatusTransition(oldStatus, newStatus)) {
                 pkg.setStatus(newStatus);
                 if (newStatus == Package.Status.DELIVERED) {
                     pkg.setDeliveredAt(LocalDateTime.now());
                     logger.info("Pacote marcado como entregue em: {}", pkg.getDeliveredAt());
                 }
                 pkg.setUpdatedAt(LocalDateTime.now());
+                // Persist the updated package
                 Package updatedPackage = packageRepository.save(pkg);
                 logger.info("Status atualizado com sucesso para: {}", updatedPackage.getStatus());
+
+                // Create tracking event for status update
+                Event event = new Event();
+                event.setPkg(updatedPackage);
+                event.setDescription("Status changed from " + oldStatus + " to " + newStatus);
+                event.setLocalization("System Update");
+                eventRepository.save(event);
+                logger.info("Evento de rastreamento criado: {}", event);
+                webhookNotifier.notifyEvent(event);
+
                 return packageMapper.toResponseDTO(updatedPackage, true);
             } else {
-                logger.error("Transição inválida do status: {} para {}", pkg.getStatus(), newStatus);
+                logger.error("Transição inválida do status: {} para {}", oldStatus, newStatus);
                 throw new InvalidStatusTransitionException("Invalid status transition from " +
-                        pkg.getStatus() + " to " + newStatus);
+                        oldStatus + " to " + newStatus);
             }
         } else {
             logger.error("Pacote não encontrado para id: {}", id);
@@ -171,10 +188,21 @@ public class PackageService {
             logger.error("Cancelamento não permitido. Status atual: {}", pkg.getStatus());
             throw new InvalidStatusTransitionException("Only packages that have not left for delivery can be cancelled");
         }
+        Package.Status oldStatus = pkg.getStatus();
         pkg.setStatus(Package.Status.CANCELED);
         pkg.setUpdatedAt(LocalDateTime.now());
         Package updatedPackage = packageRepository.save(pkg);
         logger.info("Pacote cancelado com sucesso: {}", updatedPackage);
+
+        // Create tracking event for cancellation
+        Event event = new Event();
+        event.setPkg(updatedPackage);
+        event.setDescription("Package cancelled (status changed from " + oldStatus + " to CANCELED)");
+        event.setLocalization("Cancellation Endpoint");
+        eventRepository.save(event);
+        logger.info("Evento de rastreamento de cancelamento criado: {}", event);
+        webhookNotifier.notifyEvent(event);
+
         return packageMapper.toCancelResponseDTO(updatedPackage);
     }
 
