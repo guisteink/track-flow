@@ -35,7 +35,7 @@ public class PackageController {
     public ResponseEntity<PackageResponseDTO> createPackage(@Valid @RequestBody PackageRequestDTO packageRequestDTO) {
         logger.info("Iniciando criação de pacote. Requisição recebida: {}", packageRequestDTO);
         PackageResponseDTO createdPackage = packageService.createPackage(packageRequestDTO);
-        logger.info("Pacote criado com sucesso. Detalhes do pacote: {}", createdPackage);
+        logger.info("Pacote criado com sucesso. ID: {} - Status: {}", createdPackage.getId(), createdPackage.getStatus());
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                         .path("/{id}")
                         .buildAndExpand(createdPackage.getId())
@@ -92,7 +92,7 @@ public class PackageController {
             logger.warn("Nenhum pacote encontrado para o id: {}", id);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-        // Gerar um ETag simples a partir do hashCode (ou uma versão mais robusta se necessário)
+        /* Verifica o cabeçalho If-None-Match" para validação de cache utilizando ETag */
         String eTag = Integer.toHexString(pkg.hashCode());
         if (ifNoneMatch != null && ifNoneMatch.equals(eTag)) {
             logger.info("Recurso não modificado para o id: {}", id);
@@ -109,6 +109,7 @@ public class PackageController {
     public ResponseEntity<PackageResponseDTO> updatePackageStatus(@PathVariable UUID id, @RequestBody UpdatePackageStatusRequestDTO updatePackageStatusRequestDTO) {
         logger.info("Iniciando atualização de status para o pacote com id: {}. Dados recebidos: {}", id, updatePackageStatusRequestDTO);
         try {
+            logger.info("Atualizando status do pacote {}. Novo status: {}", id, updatePackageStatusRequestDTO.getStatus());
             PackageResponseDTO updatedPackage = packageService.updatePackageStatus(id, updatePackageStatusRequestDTO);
             logger.info("Status do pacote atualizado com sucesso. Id: {}. Novo status: {}", id, updatedPackage);
             return ResponseEntity.ok(updatedPackage);

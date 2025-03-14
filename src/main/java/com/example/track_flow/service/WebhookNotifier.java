@@ -26,7 +26,7 @@ public class WebhookNotifier {
     @Async("taskExecutor")
     public void notifyEvent(Event event) {
         if (webhookUrl == null || webhookUrl.isBlank()) {
-            logger.warn("Webhook URL not configured, skipping notification.");
+            logger.warn("Webhook URL não configurada, ignorando notificação.");
             return;
         }
         HttpHeaders headers = new HttpHeaders();
@@ -34,9 +34,9 @@ public class WebhookNotifier {
         HttpEntity<Event> request = new HttpEntity<>(event, headers);
         try {
             ResponseEntity<String> response = restTemplate.exchange(webhookUrl, HttpMethod.POST, request, String.class);
-            logger.info("Webhook notification sent asynchronously. Response code: {}", response.getStatusCode());
+            logger.info("Notificação enviada. Código de resposta: {}", response.getStatusCode());
         } catch (Exception ex) {
-            logger.error("Error sending asynchronous webhook notification", ex);
+            logger.error("Erro ao enviar notificação webhook. Mensagem: {}", ex.getMessage(), ex);
         }
     }
 }
