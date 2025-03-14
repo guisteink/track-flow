@@ -66,7 +66,8 @@ public class Package {
     public enum Status {
         CREATED,
         IN_TRANSIT,
-        DELIVERED
+        DELIVERED,
+        CANCELED
     }
 
     @PrePersist

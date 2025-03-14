@@ -1,22 +1,25 @@
 package com.example.track_flow.service;
 
+import com.example.track_flow.dto.CancelResponseDTO;
+import com.example.track_flow.dto.EventDTO;
 import com.example.track_flow.dto.PackageRequestDTO;
 import com.example.track_flow.dto.PackageResponseDTO;
 import com.example.track_flow.dto.UpdatePackageStatusRequestDTO;
+import com.example.track_flow.exception.InvalidStatusTransitionException;
+import com.example.track_flow.exception.PackageNotFoundException;
+import com.example.track_flow.mapper.PackageMapper;
 import com.example.track_flow.model.Event;
 import com.example.track_flow.model.Package;
 import com.example.track_flow.repository.EventRepository;
 import com.example.track_flow.repository.PackageRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -24,37 +27,40 @@ import java.util.UUID;
 public class PackageService {
 
     private static final Logger logger = LoggerFactory.getLogger(PackageService.class);
+    private final PackageRepository packageRepository;
+    private final EventRepository eventRepository;
+    private final HolidayService holidayService;
+    private final FunFactService funFactService;
+    private final PackageMapper packageMapper;
 
-    @Autowired
-    private PackageRepository packageRepository;
-
-    @Autowired
-    private HolidayService holidayService;
-
-    @Autowired
-    private FunFactService funFactService;
-
-    @Autowired
-    private EventRepository eventRepository;
+    public PackageService(PackageRepository packageRepository,
+                          EventRepository eventRepository,
+                          HolidayService holidayService,
+                          FunFactService funFactService,
+                          PackageMapper packageMapper) {
+        this.packageRepository = packageRepository;
+        this.eventRepository = eventRepository;
+        this.holidayService = holidayService;
+        this.funFactService = funFactService;
+        this.packageMapper = packageMapper;
+    }
 
     public PackageResponseDTO createPackage(PackageRequestDTO packageRequestDTO) {
-        logger.info("Iniciando criação do pacote com dados: {}", packageRequestDTO);
-
+        logger.info("Iniciando criação do pacote: {}", packageRequestDTO);
         validatePackageRequest(packageRequestDTO);
-
         String formattedDate = formatEstimatedDeliveryDate(packageRequestDTO.getEstimatedDeliveryDate());
         boolean isHoliday = holidayService.checkIfHoliday(formattedDate);
         String funFact = funFactService.getDogFunFact();
 
-        Package packageRequest = new Package();
-        packageRequest.setDescription(packageRequestDTO.getDescription());
-        packageRequest.setSender(packageRequestDTO.getSender());
-        packageRequest.setRecipient(packageRequestDTO.getRecipient());
-        packageRequest.setHoliday(isHoliday);
-        packageRequest.setFunFact(funFact);
-        packageRequest.setStatus(Package.Status.CREATED);
+        Package pkg = new Package();
+        pkg.setDescription(packageRequestDTO.getDescription());
+        pkg.setSender(packageRequestDTO.getSender());
+        pkg.setRecipient(packageRequestDTO.getRecipient());
+        pkg.setHoliday(isHoliday);
+        pkg.setFunFact(funFact);
+        pkg.setStatus(Package.Status.CREATED);
 
-        Package savedPackage = packageRepository.save(packageRequest);
+        Package savedPackage = packageRepository.save(pkg);
         logger.info("Pacote salvo com sucesso: {}", savedPackage);
 
         Event event = new Event();
@@ -62,85 +68,113 @@ public class PackageService {
         event.setDescription("Pacote chegou ao centro de distribuição");
         event.setLocalization("Centro de Distribuição São Paulo");
         eventRepository.save(event);
-        logger.info("Evento salvo com sucesso: {}", event);
+        logger.info("Evento inicial salvo com sucesso: {}", event);
 
-        return mapToResponseDTO(savedPackage);
+        PackageResponseDTO responseDTO = packageMapper.toResponseDTO(savedPackage, false);
+        logger.info("Retornando resposta DTO: {}", responseDTO);
+        return responseDTO;
     }
 
     private void validatePackageRequest(PackageRequestDTO packageRequestDTO) {
-        // Add validations here
         logger.info("Validando dados do pacote: {}", packageRequestDTO);
     }
 
     private String formatEstimatedDeliveryDate(LocalDate estimatedDeliveryDate) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         String formattedDate = estimatedDeliveryDate.format(formatter);
-        logger.info("Data de entrega estimada formatada: {}", formattedDate);
+        logger.info("Data formatada: {}", formattedDate);
         return formattedDate;
     }
 
-    private PackageResponseDTO mapToResponseDTO(Package savedPackage) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
-        PackageResponseDTO responseDTO = new PackageResponseDTO();
-        responseDTO.setId(savedPackage.getId().toString());
-        responseDTO.setDescription(savedPackage.getDescription());
-        responseDTO.setSender(savedPackage.getSender());
-        responseDTO.setRecipient(savedPackage.getRecipient());
-        responseDTO.setStatus(savedPackage.getStatus().name());
-        responseDTO.setCreatedAt(savedPackage.getCreatedAt().format(formatter));
-        responseDTO.setUpdatedAt(savedPackage.getUpdatedAt().format(formatter));
-        if (savedPackage.getDeliveredAt() != null) {
-            responseDTO.setDeliveredAt(savedPackage.getDeliveredAt().format(formatter));
-        }
-        logger.info("Mapeando pacote salvo para DTO de resposta: {}", responseDTO);
-        return responseDTO;
-    }
-
     public List<Package> getAllPackages() {
-        logger.info("Buscando todos os pacotes");
-        return packageRepository.findAll();
+        logger.info("Buscando todos os pacotes cadastrados.");
+        List<Package> packages = packageRepository.findAll();
+        logger.info("Total de pacotes encontrados: {}", packages.size());
+        return packages;
     }
 
     public List<Event> getPackageEvents(UUID packageId) {
-        logger.info("Buscando todos os eventos do pacote com id: {}", packageId);
+        logger.info("Buscando eventos para o pacote com id: {}", packageId);
         Optional<Package> optionalPackage = packageRepository.findById(packageId);
         if (optionalPackage.isPresent()) {
-            return optionalPackage.get().getEvents();
+            List<Event> events = optionalPackage.get().getEvents();
+            logger.info("Total de eventos encontrados: {}", events.size());
+            return events;
         } else {
-            throw new IllegalArgumentException("Package not found");
+            logger.error("Pacote não encontrado para id: {}", packageId);
+            throw new PackageNotFoundException("Package not found for id: " + packageId);
         }
     }
-    
-    public PackageResponseDTO updatePackageStatus(UUID id, UpdatePackageStatusRequestDTO updatePackageStatusRequestDTO) {
-        logger.info("Iniciando atualização do status do pacote com id: {}", id);
+
+    public PackageResponseDTO updatePackageStatus(UUID id, UpdatePackageStatusRequestDTO updateRequest) {
+        logger.info("Iniciando atualização para pacote com id: {}", id);
         Optional<Package> optionalPackage = packageRepository.findById(id);
-        
         if (optionalPackage.isPresent()) {
             Package pkg = optionalPackage.get();
-            Package.Status newStatus = Package.Status.valueOf(updatePackageStatusRequestDTO.getStatus());
-    
+            Package.Status newStatus = Package.Status.valueOf(updateRequest.getStatus());
+            logger.info("Status atual: {}, Novo status: {}", pkg.getStatus(), newStatus);
+
             if (isValidStatusTransition(pkg.getStatus(), newStatus)) {
                 pkg.setStatus(newStatus);
                 if (newStatus == Package.Status.DELIVERED) {
                     pkg.setDeliveredAt(LocalDateTime.now());
+                    logger.info("Pacote marcado como entregue em: {}", pkg.getDeliveredAt());
                 }
                 pkg.setUpdatedAt(LocalDateTime.now());
                 Package updatedPackage = packageRepository.save(pkg);
-                return mapToResponseDTO(updatedPackage);
+                logger.info("Status atualizado com sucesso para: {}", updatedPackage.getStatus());
+                return packageMapper.toResponseDTO(updatedPackage, true);
             } else {
-                throw new IllegalArgumentException("Invalid status transition");
+                logger.error("Transição inválida do status: {} para {}", pkg.getStatus(), newStatus);
+                throw new InvalidStatusTransitionException("Invalid status transition from " +
+                        pkg.getStatus() + " to " + newStatus);
             }
         } else {
-            throw new IllegalArgumentException("Package not found");
+            logger.error("Pacote não encontrado para id: {}", id);
+            throw new PackageNotFoundException("Package not found for id: " + id);
         }
     }
-    
+
     private boolean isValidStatusTransition(Package.Status currentStatus, Package.Status newStatus) {
-        if (currentStatus == Package.Status.CREATED && newStatus == Package.Status.IN_TRANSIT) {
-            return true;
-        } else if (currentStatus == Package.Status.IN_TRANSIT && newStatus == Package.Status.DELIVERED) {
-            return true;
+        boolean valid = (currentStatus == Package.Status.CREATED && newStatus == Package.Status.IN_TRANSIT) ||
+                        (currentStatus == Package.Status.IN_TRANSIT && newStatus == Package.Status.DELIVERED);
+        logger.debug("Verificando transição de {} para {}: {}", currentStatus, newStatus, valid);
+        return valid;
+    }
+
+    public PackageResponseDTO getPackageById(UUID id, Boolean showEvents) {
+        logger.info("Buscando pacote com id: {}", id);
+        Optional<Package> optionalPackage = packageRepository.findById(id);
+        if (optionalPackage.isEmpty()) {
+            logger.error("Pacote não encontrado para id: {}", id);
+            throw new PackageNotFoundException("Package not found for id: " + id);
         }
-        return false;
+        Package pkg = optionalPackage.get();
+        if (Boolean.FALSE.equals(showEvents)) {
+            logger.debug("Ocultando eventos para pacote com id: {}", id);
+            pkg.setEvents(null);
+        }
+        PackageResponseDTO response = packageMapper.toResponseDTO(pkg, true);
+        logger.info("Retornando DTO para pacote {}", response);
+        return response;
+    }
+
+    public CancelResponseDTO cancelPackage(UUID id) {
+        logger.info("Iniciando cancelamento para pacote com id: {}", id);
+        Optional<Package> optionalPackage = packageRepository.findById(id);
+        if (optionalPackage.isEmpty()) {
+            logger.error("Pacote não encontrado para id: {}", id);
+            throw new PackageNotFoundException("Package not found for id: " + id);
+        }
+        Package pkg = optionalPackage.get();
+        if (pkg.getStatus() != Package.Status.CREATED) {
+            logger.error("Cancelamento não permitido. Status atual: {}", pkg.getStatus());
+            throw new InvalidStatusTransitionException("Only packages that have not left for delivery can be cancelled");
+        }
+        pkg.setStatus(Package.Status.CANCELED);
+        pkg.setUpdatedAt(LocalDateTime.now());
+        Package updatedPackage = packageRepository.save(pkg);
+        logger.info("Pacote cancelado com sucesso: {}", updatedPackage);
+        return packageMapper.toCancelResponseDTO(updatedPackage);
     }
 }
