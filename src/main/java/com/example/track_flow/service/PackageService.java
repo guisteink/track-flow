@@ -152,7 +152,7 @@ public class PackageService {
         return valid;
     }
 
-    @Cacheable(value = "packages", key = "#id")
+    @Cacheable(value = "packages", key = "#id.toString() + '-' + #showEvents")
     public PackageResponseDTO getPackageById(UUID id, Boolean showEvents) {
         logger.info("Buscando pacote com id: {}", id);
         Optional<Package> optionalPackage = packageRepository.findById(id);

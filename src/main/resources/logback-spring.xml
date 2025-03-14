@@ -10,8 +10,6 @@
                     <timeZone>UTC</timeZone>
                 </timestamp>
                 <logLevel/>
-                <loggerName/>
-                <threadName/>
                 <message/>
                 <exception/>
                 <mdc/>
