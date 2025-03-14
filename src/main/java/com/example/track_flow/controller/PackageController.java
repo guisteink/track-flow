@@ -8,13 +8,17 @@ import com.example.track_flow.model.Event;
 import com.example.track_flow.model.Package;
 import com.example.track_flow.service.PackageService;
 
+import jakarta.validation.Valid;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,11 +32,15 @@ public class PackageController {
     private PackageService packageService;
 
     @PostMapping
-    public ResponseEntity<PackageResponseDTO> createPackage(@RequestBody PackageRequestDTO packageRequestDTO) {
+    public ResponseEntity<PackageResponseDTO> createPackage(@Valid @RequestBody PackageRequestDTO packageRequestDTO) {
         logger.info("Iniciando criação de pacote. Requisição recebida: {}", packageRequestDTO);
         PackageResponseDTO createdPackage = packageService.createPackage(packageRequestDTO);
         logger.info("Pacote criado com sucesso. Detalhes do pacote: {}", createdPackage);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdPackage);
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                        .path("/{id}")
+                        .buildAndExpand(createdPackage.getId())
+                        .toUri();
+        return ResponseEntity.created(location).body(createdPackage);
     }
 
     @GetMapping
@@ -75,17 +83,26 @@ public class PackageController {
     @GetMapping("/{id}")
     public ResponseEntity<PackageResponseDTO> getPackageById(
             @PathVariable UUID id,
-            @RequestParam(required = false, defaultValue = "true") Boolean showEvents
+            @RequestParam(required = false, defaultValue = "true") Boolean showEvents,
+            @RequestHeader(value="If-None-Match", required=false) String ifNoneMatch
     ) {
         logger.info("Busca de pacote iniciada para o id: {} com parâmetro showEvents={}", id, showEvents);
-        PackageResponseDTO packageDto = packageService.getPackageById(id, showEvents);
-        if (packageDto != null) {
-            logger.info("Pacote encontrado para o id: {}. Detalhes: {}", id, packageDto);
-            return ResponseEntity.ok(packageDto);
-        } else {
+        PackageResponseDTO pkg = packageService.getPackageById(id, showEvents);
+        if (pkg == null) {
             logger.warn("Nenhum pacote encontrado para o id: {}", id);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
+        // Gerar um ETag simples a partir do hashCode (ou uma versão mais robusta se necessário)
+        String eTag = Integer.toHexString(pkg.hashCode());
+        if (ifNoneMatch != null && ifNoneMatch.equals(eTag)) {
+            logger.info("Recurso não modificado para o id: {}", id);
+            return ResponseEntity.status(HttpStatus.NOT_MODIFIED).eTag(eTag).build();
+        }
+        logger.info("Pacote encontrado para o id: {}. Detalhes: {}", id, pkg);
+        return ResponseEntity.ok()
+                .eTag(eTag)
+                .header("Cache-Control", "max-age=60, public")
+                .body(pkg);
     }
 
     @PutMapping("/{id}/status")

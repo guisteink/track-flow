@@ -14,6 +14,8 @@ import com.example.track_flow.repository.EventRepository;
 import com.example.track_flow.repository.PackageRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -91,6 +93,7 @@ public class PackageService {
         return formattedDate;
     }
 
+    @Cacheable(value = "packages", key = "'all'")
     public List<Package> getAllPackages() {
         logger.info("Buscando todos os pacotes cadastrados.");
         List<Package> packages = packageRepository.findAll();
@@ -111,6 +114,7 @@ public class PackageService {
         }
     }
 
+    @CacheEvict(value = "packages", key = "#id")
     public PackageResponseDTO updatePackageStatus(UUID id, UpdatePackageStatusRequestDTO updateRequest) {
         logger.info("Iniciando atualização para pacote com id: {}", id);
         Optional<Package> optionalPackage = packageRepository.findById(id);
@@ -159,6 +163,7 @@ public class PackageService {
         return valid;
     }
 
+    @Cacheable(value = "packages", key = "#id")
     public PackageResponseDTO getPackageById(UUID id, Boolean showEvents) {
         logger.info("Buscando pacote com id: {}", id);
         Optional<Package> optionalPackage = packageRepository.findById(id);

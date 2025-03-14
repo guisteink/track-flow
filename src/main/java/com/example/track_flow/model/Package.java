@@ -6,41 +6,46 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "pacotes")
+@Table(
+    name = "pacotes",
+    indexes = {
+        @Index(name = "idx_sender", columnList = "sender"),
+        @Index(name = "idx_recipient", columnList = "recipient"),
+        @Index(name = "idx_status", columnList = "status"),
+        @Index(name = "idx_created_at", columnList = "createdAt")
+    }
+)
 @Data
 @NoArgsConstructor
 public class Package {
-
     @Id
     @GeneratedValue(generator = "UUID")
     private UUID id;
 
     @NotBlank(message = "Description is mandatory")
-    @Column(nullable = false)
+    @Column(nullable = false, length = 255)
     private String description;
 
     @NotBlank(message = "Sender is mandatory")
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
     private String sender;
 
     @NotBlank(message = "Recipient is mandatory")
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
     private String recipient;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20)
     private Status status = Status.CREATED;
 
     @NotNull
-    @Column(nullable = false, updatable = false)
+    @Column(nullable = false)
     private LocalDateTime createdAt;
 
     @NotNull
@@ -49,11 +54,11 @@ public class Package {
 
     @Column
     private LocalDateTime estimatedDeliveryDate;
-    
+
     @Column
     private LocalDateTime deliveredAt;
 
-    @Column
+    @Column(length = 255)
     private String funFact;
 
     @Column
@@ -64,10 +69,7 @@ public class Package {
     private List<Event> events;
 
     public enum Status {
-        CREATED,
-        IN_TRANSIT,
-        DELIVERED,
-        CANCELED
+        CREATED, IN_TRANSIT, DELIVERED, CANCELED
     }
 
     @PrePersist

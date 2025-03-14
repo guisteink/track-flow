@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -22,6 +23,7 @@ public class WebhookNotifier {
         this.restTemplate = restTemplate;
     }
 
+    @Async("taskExecutor")
     public void notifyEvent(Event event) {
         if (webhookUrl == null || webhookUrl.isBlank()) {
             logger.warn("Webhook URL not configured, skipping notification.");
@@ -32,9 +34,9 @@ public class WebhookNotifier {
         HttpEntity<Event> request = new HttpEntity<>(event, headers);
         try {
             ResponseEntity<String> response = restTemplate.exchange(webhookUrl, HttpMethod.POST, request, String.class);
-            logger.info("Webhook notification sent. Response code: {}", response.getStatusCode());
+            logger.info("Webhook notification sent asynchronously. Response code: {}", response.getStatusCode());
         } catch (Exception ex) {
-            logger.error("Error sending webhook notification", ex);
+            logger.error("Error sending asynchronous webhook notification", ex);
         }
     }
 }
