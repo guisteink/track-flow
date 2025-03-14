@@ -7,6 +7,7 @@ import com.example.track_flow.model.Event;
 import com.example.track_flow.model.Package;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,10 +24,10 @@ public class PackageMapper {
         dto.setSender(pkg.getSender());
         dto.setRecipient(pkg.getRecipient());
         dto.setStatus(pkg.getStatus().name());
-        dto.setCreatedAt(pkg.getCreatedAt().format(FORMATTER));
-        dto.setUpdatedAt(pkg.getUpdatedAt().format(FORMATTER));
+        dto.setCreatedAt(formatDate(pkg.getCreatedAt()));
+        dto.setUpdatedAt(formatDate(pkg.getUpdatedAt()));
         if (pkg.getDeliveredAt() != null) {
-            dto.setDeliveredAt(pkg.getDeliveredAt().format(FORMATTER));
+            dto.setDeliveredAt(formatDate(pkg.getDeliveredAt()));
         }
         if (includeEvents && pkg.getEvents() != null) {
             List<EventDTO> eventDTOs = pkg.getEvents().stream()
@@ -38,18 +39,23 @@ public class PackageMapper {
     }
 
     public CancelResponseDTO toCancelResponseDTO(Package pkg) {
-        CancelResponseDTO response = new CancelResponseDTO();
-        response.setId(pkg.getId().toString());
-        response.setStatus(pkg.getStatus().name());
-        response.setTimestamp(pkg.getUpdatedAt().format(FORMATTER));
-        return response;
+        CancelResponseDTO dto = new CancelResponseDTO();
+        dto.setId(pkg.getId().toString());
+        dto.setStatus(pkg.getStatus().name());
+        dto.setTimestamp(formatDate(pkg.getUpdatedAt()));
+        return dto;
+    }
+
+    private String formatDate(LocalDateTime dateTime) {
+        return dateTime.format(FORMATTER);
     }
 
     private EventDTO mapToEventDTO(Event event, String pkgId) {
-        String eventTimestamp = event.getTimestamp().format(FORMATTER);
-        return new EventDTO(pkgId,
-                event.getLocalization(),
-                event.getDescription(),
-                eventTimestamp);
+        return new EventDTO(
+            pkgId,
+            event.getLocalization(),
+            event.getDescription(),
+            formatDate(event.getTimestamp())
+        );
     }
 }

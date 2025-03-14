@@ -70,12 +70,7 @@ public class PackageService {
         Package savedPackage = packageRepository.save(pkg);
         logger.info("Pacote salvo com sucesso: {}", savedPackage);
 
-        Event event = new Event();
-        event.setPkg(savedPackage);
-        event.setDescription("Pacote chegou ao centro de distribuição");
-        event.setLocalization("Centro de Distribuição São Paulo");
-        eventRepository.save(event);
-        logger.info("Evento inicial salvo com sucesso: {}", event);
+        createTrackingEvent(savedPackage, "Pacote chegou ao centro de distribuição", "Centro de Distribuição São Paulo");
 
         PackageResponseDTO responseDTO = packageMapper.toResponseDTO(savedPackage, false);
         logger.info("Retornando resposta DTO: {}", responseDTO);
@@ -83,6 +78,7 @@ public class PackageService {
     }
 
     private void validatePackageRequest(PackageRequestDTO packageRequestDTO) {
+        /* Validar headers, e dados da regra de negocio */
         logger.info("Validando dados do pacote: {}", packageRequestDTO);
     }
 
@@ -131,18 +127,11 @@ public class PackageService {
                     logger.info("Pacote marcado como entregue em: {}", pkg.getDeliveredAt());
                 }
                 pkg.setUpdatedAt(LocalDateTime.now());
-                // Persist the updated package
+
                 Package updatedPackage = packageRepository.save(pkg);
                 logger.info("Status atualizado com sucesso para: {}", updatedPackage.getStatus());
 
-                // Create tracking event for status update
-                Event event = new Event();
-                event.setPkg(updatedPackage);
-                event.setDescription("Status changed from " + oldStatus + " to " + newStatus);
-                event.setLocalization("System Update");
-                eventRepository.save(event);
-                logger.info("Evento de rastreamento criado: {}", event);
-                webhookNotifier.notifyEvent(event);
+                createTrackingEvent(updatedPackage, "Status changed from " + oldStatus + " to " + newStatus, "System Update");
 
                 return packageMapper.toResponseDTO(updatedPackage, true);
             } else {
@@ -199,14 +188,7 @@ public class PackageService {
         Package updatedPackage = packageRepository.save(pkg);
         logger.info("Pacote cancelado com sucesso: {}", updatedPackage);
 
-        // Create tracking event for cancellation
-        Event event = new Event();
-        event.setPkg(updatedPackage);
-        event.setDescription("Package cancelled (status changed from " + oldStatus + " to CANCELED)");
-        event.setLocalization("Cancellation Endpoint");
-        eventRepository.save(event);
-        logger.info("Evento de rastreamento de cancelamento criado: {}", event);
-        webhookNotifier.notifyEvent(event);
+        createTrackingEvent(updatedPackage, "Package cancelled (status changed from " + oldStatus + " to CANCELED)", "Cancellation Endpoint");
 
         return packageMapper.toCancelResponseDTO(updatedPackage);
     }
@@ -226,5 +208,15 @@ public class PackageService {
                     return match;
                 })
                 .toList();
+    }
+
+    private void createTrackingEvent(Package pkg, String description, String localization) {
+        Event event = new Event();
+        event.setPkg(pkg);
+        event.setDescription(description);
+        event.setLocalization(localization);
+        eventRepository.save(event);
+        logger.info("Evento criado: {}", event);
+        webhookNotifier.notifyEvent(event);
     }
 }
