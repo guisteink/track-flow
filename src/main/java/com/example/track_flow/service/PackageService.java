@@ -177,4 +177,21 @@ public class PackageService {
         logger.info("Pacote cancelado com sucesso: {}", updatedPackage);
         return packageMapper.toCancelResponseDTO(updatedPackage);
     }
+
+    public List<Package> getPackagesByFilter(String sender, String recipient) {
+        logger.info("Filtrando pacotes pelo sender: {} e recipient: {}", sender, recipient);
+        List<Package> packages = packageRepository.findAll();
+        return packages.stream()
+                .filter(pkg -> {
+                    boolean match = true;
+                    if (sender != null && !sender.isBlank()) {
+                        match = pkg.getSender() != null && pkg.getSender().equalsIgnoreCase(sender);
+                    }
+                    if (recipient != null && !recipient.isBlank()) {
+                        match = match && pkg.getRecipient() != null && pkg.getRecipient().equalsIgnoreCase(recipient);
+                    }
+                    return match;
+                })
+                .toList();
+    }
 }

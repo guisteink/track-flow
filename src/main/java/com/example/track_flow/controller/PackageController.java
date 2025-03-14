@@ -36,11 +36,32 @@ public class PackageController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Package>> getAllPackages() {
-        logger.info("Solicitação para listar todos os pacotes iniciada.");
-        List<Package> packages = packageService.getAllPackages();
-        logger.info("Listagem de pacotes realizada com êxito. Total de pacotes retornados: {}", packages.size());
-        return ResponseEntity.ok(packages);
+    public ResponseEntity<List<Package>> getAllPackages(
+            @RequestParam(required = false) String sender,
+            @RequestParam(required = false) String recipient
+    ) {
+        if ((sender == null || sender.isBlank()) && (recipient == null || recipient.isBlank())) {
+            logger.info("Solicitação para listar todos os pacotes iniciada.");
+            List<Package> packages = packageService.getAllPackages();
+            logger.info("Listagem de pacotes realizada com êxito. Total de pacotes retornados: {}", packages.size());
+            return ResponseEntity.ok(packages);
+        } else {
+            logger.info("Solicitação para listar pacotes com filtro: sender={} e recipient={}", sender, recipient);
+            List<Package> packages = packageService.getPackagesByFilter(sender, recipient);
+            logger.info("Número de pacotes filtrados: {}", packages.size());
+            return ResponseEntity.ok(packages);
+        }
+    }
+
+    @GetMapping("/filter")
+    public ResponseEntity<List<Package>> getPackagesByFilter(
+            @RequestParam(required = false) String sender,
+            @RequestParam(required = false) String recipient
+    ) {
+        logger.info("Iniciando filtro de pacotes por sender: {} e recipient: {}", sender, recipient);
+        List<Package> filteredPackages = packageService.getPackagesByFilter(sender, recipient);
+        logger.info("Número de pacotes filtrados: {}", filteredPackages.size());
+        return ResponseEntity.ok(filteredPackages);
     }
 
     @GetMapping("/{id}/events")
