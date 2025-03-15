@@ -40,24 +40,31 @@ public class PackageController {
                         .path("/{id}")
                         .buildAndExpand(createdPackage.getId())
                         .toUri();
-        return ResponseEntity.created(location).body(createdPackage);
+        return ResponseEntity
+            .created(location)
+            .header("Cache-Control", "no-store") 
+            .body(createdPackage);
     }
 
     @GetMapping
     public ResponseEntity<List<Package>> getAllPackages(
-            @RequestParam(required = false) String sender,
-            @RequestParam(required = false) String recipient
+        @RequestParam(required = false) String sender,
+        @RequestParam(required = false) String recipient
     ) {
         if ((sender == null || sender.isBlank()) && (recipient == null || recipient.isBlank())) {
             logger.info("Solicitação para listar todos os pacotes iniciada.");
             List<Package> packages = packageService.getAllPackages();
             logger.info("Listagem de pacotes realizada com êxito. Total de pacotes retornados: {}", packages.size());
-            return ResponseEntity.ok(packages);
+            return ResponseEntity.ok()
+                    .header("Cache-Control", "max-age=5, public") 
+                    .body(packages);
         } else {
             logger.info("Solicitação para listar pacotes com filtro: sender={} e recipient={}", sender, recipient);
             List<Package> packages = packageService.getPackagesByFilter(sender, recipient);
             logger.info("Número de pacotes filtrados: {}", packages.size());
-            return ResponseEntity.ok(packages);
+            return ResponseEntity.ok()
+                    .header("Cache-Control", "max-age=5, public")
+                    .body(packages);
         }
     }
 
@@ -69,15 +76,21 @@ public class PackageController {
         logger.info("Iniciando filtro de pacotes por sender: {} e recipient: {}", sender, recipient);
         List<Package> filteredPackages = packageService.getPackagesByFilter(sender, recipient);
         logger.info("Número de pacotes filtrados: {}", filteredPackages.size());
-        return ResponseEntity.ok(filteredPackages);
+        return ResponseEntity.ok()
+                .header("Cache-Control", "max-age=5, public") 
+                .body(filteredPackages);
     }
 
     @GetMapping("/{id}/events")
     public ResponseEntity<List<Event>> getPackageEvents(@PathVariable UUID id) {
         logger.info("Iniciando listagem de eventos para o pacote com id: {}", id);
         List<Event> events = packageService.getPackageEvents(id);
+        String eTag = Integer.toHexString(events.hashCode()); 
         logger.info("Listagem de eventos concluída para o pacote com id: {}. Total de eventos: {}", id, events.size());
-        return ResponseEntity.ok(events);
+        return ResponseEntity.ok()
+                .eTag(eTag) 
+                .header("Cache-Control", "max-age=5, public") 
+                .body(events);
     }
 
     @GetMapping("/{id}")
@@ -112,7 +125,9 @@ public class PackageController {
             logger.info("Atualizando status do pacote {}. Novo status: {}", id, updatePackageStatusRequestDTO.getStatus());
             PackageResponseDTO updatedPackage = packageService.updatePackageStatus(id, updatePackageStatusRequestDTO);
             logger.info("Status do pacote atualizado com sucesso. Id: {}. Novo status: {}", id, updatedPackage);
-            return ResponseEntity.ok(updatedPackage);
+            return ResponseEntity.ok()
+                .header("Cache-Control", "no-cache") 
+                .body(updatedPackage);
         } catch (IllegalArgumentException e) {
             logger.error("Falha na atualização do status do pacote com id: {}. Motivo: {}", id, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
@@ -125,7 +140,9 @@ public class PackageController {
         try {
             CancelResponseDTO cancelledPackage = packageService.cancelPackage(id);
             logger.info("Cancelamento concluído para pacote com id: {}. Novo status: {}", id, cancelledPackage.getStatus());
-            return ResponseEntity.ok(cancelledPackage);
+            return ResponseEntity.ok()
+                .header("Cache-Control", "no-cache") 
+                .body(cancelledPackage);
         } catch (IllegalArgumentException e) {
             logger.error("Erro no cancelamento para pacote com id: {}. Motivo: {}", id, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);

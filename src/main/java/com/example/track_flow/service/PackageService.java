@@ -52,6 +52,7 @@ public class PackageService {
         this.webhookNotifier = webhookNotifier;
     }
 
+    @CacheEvict(value = "packages", key = "'all'")
     public PackageResponseDTO createPackage(PackageRequestDTO packageRequestDTO) {
         logger.info("Iniciando criação do pacote: {}", packageRequestDTO);
         validatePackageRequest(packageRequestDTO);
@@ -89,7 +90,7 @@ public class PackageService {
         return formattedDate;
     }
 
-    @Cacheable(value = "packages", key = "'all'")
+    @CacheEvict(value = "packages", allEntries = true)
     public List<Package> getAllPackages() {
         logger.info("Buscando todos os pacotes cadastrados.");
         List<Package> packages = packageRepository.findAll();
@@ -110,7 +111,7 @@ public class PackageService {
         }
     }
 
-    @CacheEvict(value = "packages", key = "#id")
+    @CacheEvict(value = "packages", allEntries = true)
     public PackageResponseDTO updatePackageStatus(UUID id, UpdatePackageStatusRequestDTO updateRequest) {
         logger.info("Iniciando atualização para pacote com id: {}", id);
         Optional<Package> optionalPackage = packageRepository.findById(id);
@@ -169,7 +170,8 @@ public class PackageService {
         logger.info("Retornando DTO para pacote {}", response);
         return response;
     }
-
+    
+    @CacheEvict(value = "packages", key = "'all'")
     public CancelResponseDTO cancelPackage(UUID id) {
         logger.info("Iniciando cancelamento para pacote com id: {}", id);
         Optional<Package> optionalPackage = packageRepository.findById(id);
