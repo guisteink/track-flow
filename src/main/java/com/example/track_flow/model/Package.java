@@ -10,6 +10,18 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Documentação dos índices para a tabela "pacotes":
+ *
+ * 1. idx_sender: Índice no campo "sender" melhora o desempenho de consultas que filtram pacotes pelo remetente.
+ * 2. idx_recipient: Índice no campo "recipient" acelera as buscas ao pesquisar pacotes pelo destinatário.
+ * 3. idx_status: Índice no campo "status" acelera consultas filtrando pelo status de entrega, crucial para rastrear o progresso do pacote.
+ * 4. idx_created_at: Índice no campo "createdAt" otimiza consultas que ordenam ou filtram pacotes pela data de criação,
+ *    importante para relatórios e auditorias.
+ *
+ * Estes índices são empregados para reduzir o tempo de resposta das consultas, evitar varreduras completas na tabela,
+ * e assegurar uma recuperação eficiente dos dados conforme o volume aumenta.
+ */
 @Entity
 @Table(
     name = "pacotes",
@@ -65,6 +77,17 @@ public class Package {
     @Column
     private boolean isHoliday;
 
+    /**
+     * Relação de um para muitos entre Package e Event.
+     * 
+     * Este atributo representa a lista de eventos associados a um Package.
+     * A anotação @OneToMany define que um Package pode possuir múltiplos eventos,
+     * enquanto o mappedBy indica que a propriedade "pkg" na entidade Event é responsável
+     * por estabelecer a relação. O CascadeType.ALL garante que todas as operações
+     * (como persistência, remoção, etc.) executadas em um Package sejam automaticamente
+     * propagadas aos seus eventos. O uso do FetchType.LAZY aprimora a performance,
+     * carregando os eventos somente quando necessário.
+     */
     @JsonIgnoreProperties("pkg")
     @OneToMany(mappedBy = "pkg", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Event> events;

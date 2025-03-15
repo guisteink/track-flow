@@ -29,11 +29,24 @@ public class WebhookNotifier {
             logger.warn("Webhook URL não configurada, ignorando notificação.");
             return;
         }
+
+        // Criamos uma instância de HttpHeaders para definir os metadados da requisição HTTP.
+        // Aqui, definimos o tipo de conteúdo como JSON, garantindo que o servidor interprete o corpo da mensagem corretamente.
+        // Em seguida, construímos uma HttpEntity que encapsula tanto o payload (o objeto 'event') quanto os headers,
+        // permitindo que a requisição seja enviada com as informações apropriadas.
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<Event> request = new HttpEntity<>(event, headers);
+        
+        // Chama o webhook utilizando HTTP POST com o payload 'event'
         try {
-            ResponseEntity<String> response = restTemplate.exchange(webhookUrl, HttpMethod.POST, request, String.class);
+            // restTemplate.exchange envia a requisição com a URL, método, dados e tipo esperado na resposta.
+            ResponseEntity<String> response = restTemplate.exchange(
+                webhookUrl,       // URL destino
+                HttpMethod.POST,  // HTTP POST
+                request,          // Entidade que encapsula o payload e os headers
+                String.class      // Tipo da resposta esperada
+            );
             logger.info("Notificação enviada. Código de resposta: {}", response.getStatusCode());
         } catch (Exception ex) {
             logger.error("Erro ao enviar notificação webhook. Mensagem: {}", ex.getMessage(), ex);

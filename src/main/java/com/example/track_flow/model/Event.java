@@ -29,6 +29,7 @@ public class Event {
     @Column(nullable = false)
     private String localization;
 
+    // Relação Many-to-One: Cada evento pertence a um único pacote e um pacote pode ter múltiplos eventos.
     @JsonIgnoreProperties("events")
     @ManyToOne
     @JoinColumn(name = "package_id", nullable = false)

@@ -8,6 +8,18 @@ import org.springframework.web.client.RestTemplate;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * Verifica se uma data específica corresponde a um feriado público.
+ *
+ * <p>Este método recebe uma data no formato "dd/MM/yyyy", converte-a para o padrão "yyyy-MM-dd"
+ * e consulta a API externa "https://date.nager.at/api/v3/PublicHolidays/2025/BR" para obter os
+ * feriados públicos do ano de 2025 no Brasil. Em seguida, itera sobre os feriados retornados e
+ * verifica se a data formatada corresponde a algum deles, retornando true se houver correspondência
+ * e false caso contrário.
+ *
+ * @param date a data a ser verificada no formato "dd/MM/yyyy"
+ * @return true se a data corresponder a um feriado público, false caso contrário
+ */
 @Service
 public class HolidayService {
 
