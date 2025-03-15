@@ -7,15 +7,11 @@ import com.example.track_flow.model.Event;
 import com.example.track_flow.model.Package;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
 public class PackageMapper {
-
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
     public PackageResponseDTO toResponseDTO(Package pkg, boolean includeEvents) {
         PackageResponseDTO dto = new PackageResponseDTO();
@@ -24,10 +20,10 @@ public class PackageMapper {
         dto.setSender(pkg.getSender());
         dto.setRecipient(pkg.getRecipient());
         dto.setStatus(pkg.getStatus().name());
-        dto.setCreatedAt(formatDate(pkg.getCreatedAt()));
-        dto.setUpdatedAt(formatDate(pkg.getUpdatedAt()));
+        dto.setCreatedAt(pkg.getCreatedAt().toString());
+        dto.setUpdatedAt(pkg.getUpdatedAt().toString());
         if (pkg.getDeliveredAt() != null) {
-            dto.setDeliveredAt(formatDate(pkg.getDeliveredAt()));
+            dto.setDeliveredAt(pkg.getDeliveredAt().toString());
         }
         if (includeEvents && pkg.getEvents() != null) {
             List<EventDTO> eventDTOs = pkg.getEvents().stream()
@@ -42,12 +38,8 @@ public class PackageMapper {
         CancelResponseDTO dto = new CancelResponseDTO();
         dto.setId(pkg.getId().toString());
         dto.setStatus(pkg.getStatus().name());
-        dto.setTimestamp(formatDate(pkg.getUpdatedAt()));
+        dto.setTimestamp(pkg.getUpdatedAt().toString());
         return dto;
-    }
-
-    private String formatDate(LocalDateTime dateTime) {
-        return dateTime.format(FORMATTER);
     }
 
     private EventDTO mapToEventDTO(Event event, String pkgId) {
@@ -55,7 +47,7 @@ public class PackageMapper {
             pkgId,
             event.getLocalization(),
             event.getDescription(),
-            formatDate(event.getTimestamp())
+            event.getTimestamp()  // O campo "date" no DTO receberá o valor de "timestamp" do Event
         );
     }
 }

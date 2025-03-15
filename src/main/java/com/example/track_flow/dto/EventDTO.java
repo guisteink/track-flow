@@ -1,32 +1,40 @@
 package com.example.track_flow.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import java.time.LocalDateTime;
+
 public class EventDTO {
-    private String pkgId;
-    private String localization;
+
+    private String packageId;
+    private String location;
     private String description;
-    private String timestamp;
 
-    public EventDTO(String pkgId, String localization, String description, String timestamp) {
-        this.pkgId = pkgId;
-        this.localization = localization;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
+    private LocalDateTime date;
+
+    public EventDTO() {}
+
+    public EventDTO(String packageId, String location, String description, LocalDateTime date) {
+        this.packageId = packageId;
+        this.location = location;
         this.description = description;
-        this.timestamp = timestamp;
+        this.date = date;
     }
 
-    public String getPkgId() {
-        return pkgId;
+    public String getPackageId() {
+        return packageId;
     }
 
-    public void setPkgId(String pkgId) {
-        this.pkgId = pkgId;
+    public void setPackageId(String packageId) {
+        this.packageId = packageId;
     }
 
-    public String getLocalization() {
-        return localization;
+    public String getLocation() {
+        return location;
     }
 
-    public void setLocalization(String localization) {
-        this.localization = localization;
+    public void setLocation(String location) {
+        this.location = location;
     }
 
     public String getDescription() {
@@ -37,11 +45,11 @@ public class EventDTO {
         this.description = description;
     }
 
-    public String getTimestamp() {
-        return timestamp;
+    public LocalDateTime getDate() {
+        return date;
     }
 
-    public void setTimestamp(String timestamp) {
-        this.timestamp = timestamp;
+    public void setDate(LocalDateTime date) {
+        this.date = date;
     }
 }

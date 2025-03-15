@@ -5,14 +5,15 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.UUID;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
+@Table(name="eventos")
 public class Event {
 
     @Id
-    @GeneratedValue(generator = "UUID")
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "UUID")
+    @Column(name = "id")
     private UUID id;
 
     @NotBlank(message = "Description is mandatory")
@@ -20,7 +21,7 @@ public class Event {
     private String description;
 
     @NotNull
-    @Column(nullable = false, updatable = false)
+    @Column(updatable = false)
     private LocalDateTime timestamp;
 
     @NotBlank(message = "Localization is mandatory")
@@ -34,8 +35,7 @@ public class Event {
 
     @PrePersist
     protected void onCreate() {
-        LocalDateTime now = LocalDateTime.now();
-        timestamp = now;
+        timestamp = LocalDateTime.now();
     }
 
     public UUID getId() {

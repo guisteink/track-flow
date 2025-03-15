@@ -5,7 +5,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.GenericGenerator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,7 +24,8 @@ import java.util.UUID;
 @NoArgsConstructor
 public class Package {
     @Id
-    @GeneratedValue(generator = "UUID")
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "UUID")
+    @Column(name = "id")
     private UUID id;
 
     @NotBlank(message = "Description is mandatory")
