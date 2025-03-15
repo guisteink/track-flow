@@ -210,11 +210,11 @@ public class PackageService {
                 .toList();
     }
 
-    private void createTrackingEvent(Package pkg, String description, String localization) {
+    private void createTrackingEvent(Package pkg, String description, String location) {
         Event event = new Event();
         event.setPkg(pkg);
         event.setDescription(description);
-        event.setLocalization(localization);
+        event.setLocation(location);
         eventRepository.save(event);
         logger.info("Evento criado: {}", event);
         webhookNotifier.notifyEvent(event);

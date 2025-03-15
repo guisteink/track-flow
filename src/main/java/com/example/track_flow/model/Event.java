@@ -12,8 +12,8 @@ public class Event {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Name is mandatory")
-    private String name;
+    @NotBlank(message = "Location is mandatory")
+    private String location;
 
     @NotNull
     @Column(updatable = false)
@@ -37,7 +37,6 @@ public class Event {
         createdAt = LocalDateTime.now();
     }
 
-    // Getters e Setters
     public Long getId() {
         return id;
     }
@@ -46,12 +45,12 @@ public class Event {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public String getLocation() {
+        return location;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setLocation(String location) {
+        this.location = location;
     }
 
     public LocalDateTime getTimestamp() {
