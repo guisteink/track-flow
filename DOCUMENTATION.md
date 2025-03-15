@@ -47,7 +47,7 @@ Embora a implementação atual atenda aos requisitos, há diversas oportunidades
     - Datadog? =)
 - **Evolução da Arquitetura:**  
   Em cenários de crescimento contínuo, migrar para uma arquitetura de microserviços pode favorecer o isolamento, escalabilidade e manutenção dos componentes críticos.
-    -  Deploy em ambiente AWS Elastic Computing Service
+    -  Deploy em ambiente AWS Elastic Computing Service + API Gateway + NLB
 
 - **Ampliar a Cobertura de Testes:**  
   Incrementar testes unitários e de integração garantirá a estabilidade e a confiabilidade durante futuras evoluções e refatorações.
