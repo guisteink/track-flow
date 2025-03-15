@@ -48,7 +48,7 @@ public class PackageController {
     }
 
     @PutMapping("/{id}/status")
-    public ResponseEntity<PackageResponseDTO> updatePackageStatus(@PathVariable String id, @RequestBody String status) {
+    public ResponseEntity<PackageResponseDTO> updatePackageStatus(@PathVariable Long id, @RequestBody String status) {
         try {
             logger.info("Requisição para atualizar o status do pacote com id: {}", id);
             PackageResponseDTO updatedPackage = packageService.updatePackageStatus(id, status);

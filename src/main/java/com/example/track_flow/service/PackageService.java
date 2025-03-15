@@ -98,7 +98,7 @@ public class PackageService {
         return events;
     }
 
-    public PackageResponseDTO updatePackageStatus(String id, String status) {
+    public PackageResponseDTO updatePackageStatus(Long id, String status) {
         Optional<Package> optionalPackage = packageRepository.findById(id);
         if (optionalPackage.isPresent()) {
             Package pkg = optionalPackage.get();
