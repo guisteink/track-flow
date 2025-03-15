@@ -24,7 +24,7 @@ import java.util.UUID;
 @NoArgsConstructor
 public class Package {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "UUID")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private UUID id;
 
