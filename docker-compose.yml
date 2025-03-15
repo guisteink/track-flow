@@ -1,9 +1,34 @@
 version: '3.8'
 
 services:
+  app:
+    image: track-flow-app
+    container_name: track_flow_app
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/trackflowdb
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: admin
+    depends_on:
+      db:
+        condition: service_healthy
+    # Docker swarm to test below configurations
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '1.0'
+    #       memory: 1G
+    #     reservations:
+    #       cpus: '0.5'
+    #       memory: 512M
+
   db:
     image: mysql:8.0
     container_name: track_flow_mysql
+    # Docker swarm to test below configurations
+    # deploy:
+    #   replicas: 2
     environment:
       MYSQL_ROOT_PASSWORD: admin
       MYSQL_DATABASE: trackflowdb
@@ -18,19 +43,6 @@ services:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 5s
       retries: 10
-
-  app:
-    image: track-flow-app
-    container_name: track_flow_app
-    ports:
-      - "8080:8080"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/trackflowdb
-      SPRING_DATASOURCE_USERNAME: admin
-      SPRING_DATASOURCE_PASSWORD: admin
-    depends_on:
-      db:
-        condition: service_healthy
 
 volumes:
   mysql_data:
