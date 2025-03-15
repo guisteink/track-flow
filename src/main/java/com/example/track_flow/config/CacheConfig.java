@@ -21,7 +21,7 @@ public class CacheConfig {
 
     public Caffeine<Object, Object> caffeineConfig() {
         return Caffeine.newBuilder()
-                .expireAfterWrite(5, TimeUnit.SECONDS)
+                .expireAfterWrite(60, TimeUnit.SECONDS)
                 .maximumSize(1000);
     }
 }
