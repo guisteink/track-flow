@@ -1,0 +1,166 @@
+/**
+ * Arquivo de simulação de estresse para a aplicação TrackFlow.
+ * 
+ * Este arquivo contém a definição de cenários de teste de estresse para a aplicação TrackFlow.
+package trackFlowApp;
+
+import static io.gatling.javaapi.core.CoreDsl.*;
+import static io.gatling.javaapi.http.HttpDsl.*;
+
+import io.gatling.javaapi.core.*;
+import io.gatling.javaapi.http.*;
+
+public class TrackFlowStressSimulation extends Simulation {
+
+    // Número de usuários virtuais que serão simulados
+    public final int users = 20;
+    
+    // Duração da simulação em segundos
+    public final int duration = 120;
+
+    // Configuração do protocolo HTTP base para as requisições
+    HttpProtocolBuilder httpProtocol = http
+            .baseUrl("http://localhost:8080/api") // URL base da API
+            .acceptHeader("application/json")      // Cabeçalho que especifica o tipo aceito
+            .contentTypeHeader("application/json");  // Cabeçalho que especifica o tipo de conteúdo enviado
+
+    // Cenário 1 - Criação de Pacotes
+    // Realiza a criação de um pacote e, em seguida, sua consulta
+    ScenarioBuilder createPackageScenario = scenario("Criação de pacotes")
+        .exec(
+            http("Criar Pacote")
+                .post("/packages") // Endpoint para criação de pacotes
+                .body(StringBody("{ \"description\": \"Test Package\", " +
+                    "\"funFact\": \"Dogs funfact\", " +
+                    "\"sender\": \"A\", " +
+                    "\"recipient\": \"B\", " +
+                    "\"isHolliday\": true, " +
+                    "\"estimatedDeliveryDate\": \"24/10/2025\" }"))
+                .check(status().is(201)) // Verifica se a criação retorna status 201
+                .check(jsonPath("$.id").saveAs("packageId")) // Salva o id retornado na sessão
+        )
+        .exec(
+            http("Consultar Pacote")
+                .get(session -> "/packages/" + session.getString("packageId")) // Consulta o pacote criado usando o id salvo
+                .check(status().is(200)) // Verifica se a consulta retorna status 200
+        );
+
+    // Cenário 2 - Listagem e Filtragem de Pacotes
+    // Lista todos os pacotes, cria um pacote para consulta, filtra pacotes e consulta por id
+    ScenarioBuilder listFilterPackagesScenario = scenario("Listar e Filtrar Pacotes")
+            .exec(
+                http("Listar Todos os Pacotes")
+                    .get("/packages") // Endpoint para listar todos os pacotes
+                    .check(status().is(200)) // Verifica se a listagem retorna status 200
+            )
+            .pause(1) // Pausa de 1 segundo
+            .exec(
+                http("Criar Pacote para Consulta")
+                    .post("/packages") // Endpoint para criação de pacote
+                    .body(StringBody("{ \"description\": \"Consulta Test Package\", " +
+                        "\"funFact\": \"Dogs funfact\", " +
+                        "\"sender\": \"Sender Consulta\", " +
+                        "\"recipient\": \"Recipient Consulta\", " +
+                        "\"isHolliday\": true, " +
+                        "\"estimatedDeliveryDate\": \"24/10/2025\" }"))
+                    .check(status().is(201)) // Verifica se a criação retorna 201
+                    .check(jsonPath("$.id").saveAs("createdPackageId")) // Salva o id do pacote criado
+            )
+            .pause(1)
+            .exec(
+                http("Filtrar Pacotes")
+                    .get("/packages/filter") // Endpoint para filtrar pacotes
+                    .queryParam("sender", "Sender A") // Parâmetro de filtro: sender
+                    .queryParam("recipient", "Recipient A") // Parâmetro de filtro: recipient
+                    .check(status().is(200)) // Verifica se a filtragem retorna 200
+            )
+            .pause(1)
+            .exec(
+                http("Consultar Pacote Pelo ID")
+                    .get(session -> "/packages/" + session.getString("createdPackageId")) // Consulta pacote pelo id salvo
+                    .queryParam("showEvents", "true")  // Parâmetro para mostrar eventos
+                    .header("If-None-Match", "dummy-etag") // Cabeçalho para verificação de cache
+                    .check(status().in(200, 304)) // Aceita status 200 ou 304
+            );
+
+    // Cenário 3 - Atualização de Status
+    // Cria um pacote e atualiza seu status para "IN_TRANSIT"
+    ScenarioBuilder updatePackagesScenario = scenario("Atualizar Status do Pacote")
+        .exec(
+            http("Criar Pacote para Atualização")
+                .post("/packages") // Endpoint para criação de pacote
+                .body(StringBody("{ \"description\": \"Update Test Package\", " +
+                    "\"funFact\": \"Dogs funfact\", " +
+                    "\"sender\": \"Sender Update\", " +
+                    "\"recipient\": \"Recipient Update\", " +
+                    "\"isHolliday\": true, " +
+                    "\"estimatedDeliveryDate\": \"24/10/2025\" }"))
+                .check(status().is(201)) // Verifica se a criação retorna 201
+                .check(jsonPath("$.id").saveAs("packageId")) // Salva o id do pacote criado
+        )
+        .pause(1)
+        .exec(
+            http("Atualizar Status do Pacote")
+                .put(session -> "/packages/" + session.getString("packageId") + "/status") // Endpoint para atualizar status do pacote
+                .body(StringBody("{ \"status\": \"IN_TRANSIT\" }")) // Corpo da requisição com o novo status
+                .check(status().is(200)) // Verifica se a atualização retorna 200
+        );
+
+    // Cenário 4 - Cancelamento de Pacote
+    // Cria um pacote e realiza o cancelamento dele
+    ScenarioBuilder cancelPackagesScenario = scenario("Cancelar Pacote")
+            .exec(
+                http("Criar Pacote para Cancelamento")
+                    .post("/packages") // Endpoint para criação de pacote
+                    .body(StringBody("{ \"description\": \"Cancel Test Package\", " +
+                        "\"funFact\": \"Dogs funfact\", " +
+                        "\"sender\": \"Sender Cancel\", " +
+                        "\"recipient\": \"Recipient Cancel\", " +
+                        "\"isHolliday\": true, " +
+                        "\"estimatedDeliveryDate\": \"24/10/2025\" }"))
+                    .check(status().is(201)) // Verifica se a criação retorna 201
+                    .check(jsonPath("$.id").saveAs("cancelPackageId")) // Salva o id do pacote criado para cancelamento
+            )
+            .pause(1)
+            .exec(
+                http("Cancelar Pacote")
+                    .put(session -> "/packages/" + session.getString("cancelPackageId") + "/cancel") // Endpoint para cancelamento do pacote
+                    .check(status().is(200)) // Verifica se o cancelamento retorna 200
+            );
+
+    // Cenário 5 - Consulta de Eventos do Pacote
+    // Cria um pacote e consulta os eventos relacionados a ele
+    ScenarioBuilder eventsPackagesScenario = scenario("Consultar Eventos do Pacote")
+            .exec(
+                http("Criar Pacote para Eventos")
+                    .post("/packages") // Endpoint para criação de pacote
+                    .body(StringBody("{ \"description\": \"Events Test Package\", " +
+                        "\"funFact\": \"Dogs funfact\", " +
+                        "\"sender\": \"Sender Events\", " +
+                        "\"recipient\": \"Recipient Events\", " +
+                        "\"isHolliday\": true, " +
+                        "\"estimatedDeliveryDate\": \"24/10/2025\" }"))
+                    .check(status().is(201)) // Verifica se a criação retorna 201
+                    .check(jsonPath("$.id").saveAs("eventPackageId")) // Salva o id do pacote criado
+            )
+            .pause(1)
+            .exec(
+                http("Consultar Eventos do Pacote")
+                    .get(session -> "/packages/" + session.getString("eventPackageId") + "/events") // Consulta os eventos do pacote criado
+                    .check(status().is(200)) // Verifica se a consulta retorna 200
+            );
+
+    // Configuração final do setup da simulação, injetando os usuários em cada cenário
+    {
+        setUp(
+            createPackageScenario.injectOpen(rampUsers(users).during(duration)),
+            listFilterPackagesScenario.injectOpen(rampUsers(users).during(duration)),
+            updatePackagesScenario.injectOpen(rampUsers(users).during(duration)),
+            cancelPackagesScenario.injectOpen(rampUsers(users).during(duration)),
+            eventsPackagesScenario.injectOpen(rampUsers(users).during(duration))
+        ).protocols(httpProtocol); // Aplica a configuração do protocolo HTTP em todos os cenários
+    }
+}
+
+
+ */
