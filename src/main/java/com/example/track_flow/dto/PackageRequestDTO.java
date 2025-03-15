@@ -1,25 +1,16 @@
 package com.example.track_flow.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 
 public class PackageRequestDTO {
 
-    @NotBlank(message = "Description is mandatory")
     private String description;
-
-    @NotBlank(message = "Sender is mandatory")
     private String sender;
-
-    @NotBlank(message = "Recipient is mandatory")
     private String recipient;
-
     private boolean isHoliday;
     private String funFact;
 
-    @NotNull(message = "Estimated delivery date is mandatory")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     private LocalDate estimatedDeliveryDate;
 

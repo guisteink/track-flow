@@ -5,47 +5,38 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @Entity
-@Table(
-    name = "pacotes",
-    indexes = {
-        @Index(name = "idx_sender", columnList = "sender"),
-        @Index(name = "idx_recipient", columnList = "recipient"),
-        @Index(name = "idx_status", columnList = "status"),
-        @Index(name = "idx_created_at", columnList = "createdAt")
-    }
-)
+@Table(name = "pacotes")
 @Data
 @NoArgsConstructor
 public class Package {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "UUID")
-    @Column(name = "id")
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @NotBlank(message = "Description is mandatory")
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false)
     private String description;
 
     @NotBlank(message = "Sender is mandatory")
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false)
     private String sender;
 
     @NotBlank(message = "Recipient is mandatory")
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false)
     private String recipient;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false)
     private Status status = Status.CREATED;
 
     @NotNull
-    @Column(nullable = false)
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @NotNull
@@ -54,22 +45,23 @@ public class Package {
 
     @Column
     private LocalDateTime estimatedDeliveryDate;
-
+    
     @Column
     private LocalDateTime deliveredAt;
 
-    @Column(length = 255)
+    @Column
     private String funFact;
 
     @Column
     private boolean isHoliday;
 
-    @JsonIgnoreProperties("pkg")
     @OneToMany(mappedBy = "pkg", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Event> events;
 
     public enum Status {
-        CREATED, IN_TRANSIT, DELIVERED, CANCELED
+        CREATED,
+        IN_TRANSIT,
+        DELIVERED
     }
 
     @PrePersist

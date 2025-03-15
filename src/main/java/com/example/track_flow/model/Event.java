@@ -4,31 +4,29 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
-import java.util.UUID;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
-@Table(name="eventos")
 public class Event {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "UUID")
-    @Column(name = "id")
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @NotBlank(message = "Name is mandatory")
+    private String name;
+
+    @NotNull
+    @Column(updatable = false)
+    private LocalDateTime timestamp;
 
     @NotBlank(message = "Description is mandatory")
     @Column(nullable = false)
     private String description;
 
     @NotNull
-    @Column(updatable = false)
-    private LocalDateTime timestamp;
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
-    @NotBlank(message = "Localization is mandatory")
-    @Column(nullable = false)
-    private String localization;
-
-    @JsonIgnoreProperties("events")
     @ManyToOne
     @JoinColumn(name = "package_id", nullable = false)
     private Package pkg;
@@ -36,22 +34,24 @@ public class Event {
     @PrePersist
     protected void onCreate() {
         timestamp = LocalDateTime.now();
+        createdAt = LocalDateTime.now();
     }
 
-    public UUID getId() {
+    // Getters e Setters
+    public Long getId() {
         return id;
     }
 
-    public void setId(UUID id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
-    public String getDescription() {
-        return description;
+    public String getName() {
+        return name;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public LocalDateTime getTimestamp() {
@@ -62,12 +62,20 @@ public class Event {
         this.timestamp = timestamp;
     }
 
-    public String getLocalization() {
-        return localization;
+    public String getDescription() {
+        return description;
     }
 
-    public void setLocalization(String localization) {
-        this.localization = localization;
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
     public Package getPkg() {
