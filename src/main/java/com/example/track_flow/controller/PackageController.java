@@ -48,33 +48,25 @@ public class PackageController {
 
     @GetMapping
     public ResponseEntity<List<Package>> getAllPackages(
-        @RequestParam(required = false) String sender,
-        @RequestParam(required = false) String recipient
     ) {
-        if ((sender == null || sender.isBlank()) && (recipient == null || recipient.isBlank())) {
-            logger.info("Solicitação para listar todos os pacotes iniciada.");
-            List<Package> packages = packageService.getAllPackages();
-            logger.info("Listagem de pacotes realizada com êxito. Total de pacotes retornados: {}", packages.size());
-            return ResponseEntity.ok()
-                    .header("Cache-Control", "max-age=60, public") 
-                    .body(packages);
-        } else {
-            logger.info("Solicitação para listar pacotes com filtro: sender={} e recipient={}", sender, recipient);
-            List<Package> packages = packageService.getPackagesByFilter(sender, recipient);
-            logger.info("Número de pacotes filtrados: {}", packages.size());
-            return ResponseEntity.ok()
-                    .header("Cache-Control", "max-age=60, public")
-                    .body(packages);
-        }
+        logger.info("Solicitação para listar todos os pacotes iniciada.");
+        List<Package> packages = packageService.getAllPackages();
+        logger.info("Listagem de pacotes realizada com êxito. Total de pacotes retornados: {}", packages.size());
+        return ResponseEntity.ok()
+                .header("Cache-Control", "max-age=60, public") 
+                .body(packages);
     }
 
     @GetMapping("/filter")
     public ResponseEntity<List<Package>> getPackagesByFilter(
             @RequestParam(required = false) String sender,
-            @RequestParam(required = false) String recipient
+            @RequestParam(required = false) String recipient,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String createdAt
     ) {
-        logger.info("Iniciando filtro de pacotes por sender: {} e recipient: {}", sender, recipient);
-        List<Package> filteredPackages = packageService.getPackagesByFilter(sender, recipient);
+        logger.info("Iniciando filtro de pacotes com sender: {}, recipient: {}, status: {} e createdAt: {}",
+                    sender, recipient, status, createdAt);
+        List<Package> filteredPackages = packageService.getPackagesByFilter(sender, recipient, status, createdAt);
         logger.info("Número de pacotes filtrados: {}", filteredPackages.size());
         return ResponseEntity.ok()
                 .header("Cache-Control", "max-age=60, public") 

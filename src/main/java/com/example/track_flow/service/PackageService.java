@@ -39,11 +39,11 @@ public class PackageService {
     private final WebhookNotifier webhookNotifier;
 
     public PackageService(PackageRepository packageRepository,
-                          EventRepository eventRepository,
-                          HolidayService holidayService,
-                          FunFactService funFactService,
-                          PackageMapper packageMapper,
-                          WebhookNotifier webhookNotifier) {
+            EventRepository eventRepository,
+            HolidayService holidayService,
+            FunFactService funFactService,
+            PackageMapper packageMapper,
+            WebhookNotifier webhookNotifier) {
         this.packageRepository = packageRepository;
         this.eventRepository = eventRepository;
         this.holidayService = holidayService;
@@ -193,26 +193,41 @@ public class PackageService {
         createTrackingEvent(updatedPackage, "Package cancelled (status changed from " + oldStatus + " to CANCELED)", "Cancellation Endpoint");
 
         return packageMapper.toCancelResponseDTO(updatedPackage);
-    }
+        }
 
-    public List<Package> getPackagesByFilter(String sender, String recipient) {
-        logger.info("Filtrando pacotes pelo sender: {} e recipient: {}", sender, recipient);
-        List<Package> packages = packageRepository.findAll();
-        return packages.stream()
-                .filter(pkg -> {
-                    boolean match = true;
-                    if (sender != null && !sender.isBlank()) {
-                        match = pkg.getSender() != null && pkg.getSender().equalsIgnoreCase(sender);
-                    }
-                    if (recipient != null && !recipient.isBlank()) {
-                        match = match && pkg.getRecipient() != null && pkg.getRecipient().equalsIgnoreCase(recipient);
-                    }
-                    return match;
-                })
-                .toList();
-    }
+        public List<Package> getPackagesByFilter(String sender, String recipient, String status, String createdAt) {
+            logger.info("Filtrando pacotes com sender: {}, recipient: {}, status: {} e createdAt: {}", sender, recipient, status, createdAt);
+            
+            // Padroniza valores nulos ou em branco para null
+            String sSender = (sender == null || sender.isBlank()) ? null : sender;
+            String sRecipient = (recipient == null || recipient.isBlank()) ? null : recipient;
+            
+            // Converte status para enum, se informado
+            Package.Status sStatus = null;
+            if (status != null && !status.isBlank()) {
+                try {
+                    sStatus = Package.Status.valueOf(status.toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    logger.error("Status informado inválido: {}", status);
+                    throw new IllegalArgumentException("Status inválido: " + status);
+                }
+            }
+            
+            // Converte createdAt para LocalDateTime, se informado
+            LocalDateTime lCreatedAt = null;
+            if (createdAt != null && !createdAt.isBlank()) {
+                try {
+                    lCreatedAt = LocalDateTime.parse(createdAt);
+                } catch (Exception e) {
+                    logger.error("Formato de createdAt inválido: {}. Use o padrão ISO_LOCAL_DATE_TIME.", createdAt);
+                    throw new IllegalArgumentException("Formato de createdAt inválido. Use o padrão ISO_LOCAL_DATE_TIME.");
+                }
+            }
+            
+            return packageRepository.findByFilters(sSender, sRecipient, sStatus, lCreatedAt);
+        }
 
-    private void createTrackingEvent(Package pkg, String description, String localization) {
+        private void createTrackingEvent(Package pkg, String description, String localization) {
         Event event = new Event();
         event.setPkg(pkg);
         event.setDescription(description);
