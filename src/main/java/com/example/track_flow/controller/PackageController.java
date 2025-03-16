@@ -56,14 +56,14 @@ public class PackageController {
             List<Package> packages = packageService.getAllPackages();
             logger.info("Listagem de pacotes realizada com êxito. Total de pacotes retornados: {}", packages.size());
             return ResponseEntity.ok()
-                    .header("Cache-Control", "max-age=5, public") 
+                    .header("Cache-Control", "max-age=60, public") 
                     .body(packages);
         } else {
             logger.info("Solicitação para listar pacotes com filtro: sender={} e recipient={}", sender, recipient);
             List<Package> packages = packageService.getPackagesByFilter(sender, recipient);
             logger.info("Número de pacotes filtrados: {}", packages.size());
             return ResponseEntity.ok()
-                    .header("Cache-Control", "max-age=5, public")
+                    .header("Cache-Control", "max-age=60, public")
                     .body(packages);
         }
     }
@@ -77,7 +77,7 @@ public class PackageController {
         List<Package> filteredPackages = packageService.getPackagesByFilter(sender, recipient);
         logger.info("Número de pacotes filtrados: {}", filteredPackages.size());
         return ResponseEntity.ok()
-                .header("Cache-Control", "max-age=5, public") 
+                .header("Cache-Control", "max-age=60, public") 
                 .body(filteredPackages);
     }
 
@@ -89,7 +89,7 @@ public class PackageController {
         logger.info("Listagem de eventos concluída para o pacote com id: {}. Total de eventos: {}", id, events.size());
         return ResponseEntity.ok()
                 .eTag(eTag) 
-                .header("Cache-Control", "max-age=5, public") 
+                .header("Cache-Control", "max-age=60, public") 
                 .body(events);
     }
 
